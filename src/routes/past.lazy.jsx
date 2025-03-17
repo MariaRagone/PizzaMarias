@@ -13,10 +13,10 @@ export const Route = createLazyFileRoute("/past")({
 });
 
 // beneath Route export
-function ErrorBoundaryWrappedPastOrderRoutes() {
+function ErrorBoundaryWrappedPastOrderRoutes(props) {
   return (
     <ErrorBoundary>
-      <PastOrdersRoute />
+      <PastOrdersRoute {...props} />
     </ErrorBoundary>
   );
 }
