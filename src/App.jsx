@@ -13,7 +13,6 @@ const App = () => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
-        <RouterProvider router={router} />
       </QueryClientProvider>
     </StrictMode>
   );
