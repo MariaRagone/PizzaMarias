@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, Suspense, use } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createLazyFileRoute } from "@tanstack/react-router";
 import getPastOrders from "../api/getPastOrders";
 import Modal from "../components/Modal";
 import getPastOrder from "../api/getPastOrder";
@@ -8,28 +8,38 @@ import getPastOrder from "../api/getPastOrder";
 import { priceConverter } from "../components/useCurrency";
 import ErrorBoundary from "../components/ErrorBoundary";
 
-export const Route = createFileRoute("/past/node")({
+export const Route = createLazyFileRoute("/past")({
   component: ErrorBoundaryWrappedPastOrderRoutes,
 });
 
-// beneath Route export
-function ErrorBoundaryWrappedPastOrderRoutes(props) {
-  return (
-    <ErrorBoundary>
-      <PastOrdersRoute {...props} />
-    </ErrorBoundary>
-  );
-}
-function PastOrdersRoute() {
+function ErrorBoundaryWrappedPastOrderRoutes() {
   const [page, setPage] = useState(1);
-  const [focusedOrder, setFocusedOrder] = useState();
-  // const price = useCurrency();
-  const { isLoading, data } = useQuery({
+  const loadedPromise = useQuery({
     queryKey: ["past-orders", page],
     queryFn: () => getPastOrders(page),
     staleTime: 30000,
-  });
-
+  }).promise;
+  return (
+    <ErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="past-orders">
+            <h2>Loading Past Orders …</h2>
+          </div>
+        }
+      >
+        <PastOrdersRoute
+          loadedPromise={loadedPromise}
+          page={page}
+          setPage={setPage}
+        />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+function PastOrdersRoute({ page, setPage, loadedPromise }) {
+  const [focusedOrder, setFocusedOrder] = useState();
+  const data = use(loadedPromise);
   const { isLoading: isLoadingPastOrder, data: pastOrderData } = useQuery({
     queryKey: ["past-order", focusedOrder],
     queryFn: () => getPastOrder(focusedOrder),
@@ -37,13 +47,6 @@ function PastOrdersRoute() {
     staleTime: 24 * 60 * 60 * 1000, // one day in milliseconds,
   });
 
-  if (isLoading) {
-    return (
-      <div className="past-orders">
-        <h2>LOADING …</h2>
-      </div>
-    );
-  }
   return (
     <div className="past-orders">
       <table>
