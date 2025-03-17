@@ -1,8 +1,7 @@
-// import React from "react";
 const Pizza = (props) => {
   return (
-    <div className="">
-      <h2>{props.name}</h2>
+    <div className="pizza">
+      <h1>{props.name}</h1>
       <p>{props.description}</p>
       <img src={props.image} alt={props.name} />
     </div>
